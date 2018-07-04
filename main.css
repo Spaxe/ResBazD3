@@ -1,0 +1,26 @@
+
+
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.svg {
+  width: 400px;
+  height: 200px;
+}
+
+.circle {
+  stroke-width: 3px;
+  stroke: #e31af8;
+  fill: #fed976;
+}
+
+.cat {
+  margin-left: 20px;
+  width: 200px;
+}
+
+.blue-heading {
+  color: blue;
+  font-size: 20px;
+}
