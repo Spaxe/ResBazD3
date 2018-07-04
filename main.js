@@ -5,6 +5,44 @@ d3.json(dataUrl)
     var chart = d3.select('#chart');
     var svg = chart.append('svg');
 
+    var regions = [
+      "Sub-Saharan Africa",
+      "South Asia",
+      "Middle East & North Africa",
+      "America",
+      "Europe & Central Asia",
+      "East Asia & Pacific"
+    ];
+
+    var controls = d3.select('#controls');
+    regions.map( function (r) {
+      var div = controls.append('div');
+      div.append('input')
+         .attr('type', 'checkbox')
+         .attr('checked', true)
+         .attr('value', r)
+      div.append('label')
+         .text(r);
+    });
+
+    var filtered_nations = nations.map(function (n) { return n; });
+
+    d3.selectAll('input').on('change', function () {
+      var region = this.value;
+      if (this.checked) {
+        var new_nations = nations.filter (function (n) {
+          return n.region == region;
+        });
+        filtered_nations = filtered_nations.concat(new_nations);
+      } else {
+        filtered_nations = filtered_nations.filter(function (n) {
+          return n.region != region;
+        });
+      }
+
+      update();
+    });
+
     var g = svg.append('g');
     var margin = { top: 20, left: 80, bottom: 50, right: 20 };
     var width = 960;
@@ -17,8 +55,24 @@ d3.json(dataUrl)
 
     g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+    // Compute the global minimum and maximum of each column for
+    // each country
+    var incomes = [];
+    var lifeExpectancies = [];
+    var populations = [];
+    nations.map( function (n) {
+      incomes = incomes.concat(n.income);
+      lifeExpectancies = lifeExpectancies.concat(n.lifeExpectancy);
+      populations = populations.concat(n.population);
+    });
+    var xExtent = d3.extent(incomes);
+    var yExtent = d3.extent(lifeExpectancies);
+    var rExtent = d3.extent(populations);
+
+    // Define axis and scales, which maps the data to svg container
+    // width and height, as well as the circle radii.
     var xScale = d3.scaleLog()
-                   .domain([250, 1e5])
+                   .domain(xExtent)
                    .range([0, g_width]);
     var xAxis = d3.axisBottom(xScale)
                   .ticks(10, ',.0f');
@@ -28,7 +82,7 @@ d3.json(dataUrl)
      .call(xAxis);
 
     var yScale = d3.scaleLinear()
-                   .domain([0, 120])
+                   .domain(yExtent)
                    .range([g_height, 0])
     var yAxis = d3.axisLeft(yScale);
     g.append('g')
@@ -49,20 +103,28 @@ d3.json(dataUrl)
       .attr('y', 0);
 
     var rScale = d3.scaleSqrt()
-                   .domain([0, 5e8])
+                   .domain(rExtent)
                    .range([0, 40]);
 
-    var circles = g.selectAll('.circle')
-                   .data(nations, function (d) { return d.name; });
+    var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-    console.log(nations);
+    function update () {
+      var circles = g.selectAll('.circle')
+                     .data(filtered_nations, function (d) { return d.name; });
 
-    circles.enter()
-      .append('circle')
-      .attr('class', 'circle')
-      .attr('cx', function (d) { return xScale(d.income[d.income.length-1]) })
-      .attr('cy', function (d) { return yScale(d.lifeExpectancy[d.lifeExpectancy.length-1]) })
-      .attr('r', function (d) { return rScale(d.population[d.population.length-1]) });
+      circles.enter()
+        .append('circle')
+        .attr('class', 'circle')
+        .attr('fill', function (d) { return colorScale(d.region); })
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1)
+        .attr('cx', function (d) { return xScale(d.income[d.income.length-1]) })
+        .attr('cy', function (d) { return yScale(d.lifeExpectancy[d.lifeExpectancy.length-1]) })
+        .attr('r', function (d) { return rScale(d.population[d.population.length-1]) });
+
+      circles.exit().remove();
+    }
+    update();
 
   })
   .catch( function (err) {
