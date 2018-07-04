@@ -20,7 +20,8 @@ d3.json(dataUrl)
     var xScale = d3.scaleLog()
                    .domain([250, 1e5])
                    .range([0, g_width]);
-    var xAxis = d3.axisBottom(xScale);
+    var xAxis = d3.axisBottom(xScale)
+                  .ticks(10, ',.0f');
     g.append('g')
      .attr('class', 'x axis')
      .attr('transform', 'translate(0,' + g_height + ')')
@@ -36,9 +37,16 @@ d3.json(dataUrl)
 
     g.append('text')
       .attr('class', 'label')
-      .text('Income')
+      .text('Income per capita (dollars)')
       .attr('x', g_width / 2)
       .attr('y', height - 40);
+
+    g.append('text')
+      .attr('class', 'label')
+      .attr('transform', 'translate(-40,' + (g_height / 2) + ') rotate(-90)')
+      .text('Life Expentancy (years)')
+      .attr('x', 0)
+      .attr('y', 0);
 
     var rScale = d3.scaleSqrt()
                    .domain([0, 5e8])
